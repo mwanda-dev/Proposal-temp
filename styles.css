@@ -1,0 +1,128 @@
+@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&display=swap");
+
+:root {
+	--base-1: #080708;
+	--base-2: #3772ff;
+	--base-3: #df2935;
+	--base-4: #fdca40;
+}
+
+* {
+	padding: 0;
+	margin: 0;
+	box-sizing: border-box;
+}
+
+img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+button {
+	width: 120px;
+}
+
+h1 {
+	text-transform: uppercase;
+	font-family: "Bricolage Grotesque", sans-serif;
+	font-size: 2.5rem;
+	font-weight: 800;
+	line-height: 1;
+}
+
+p {
+	text-transform: uppercase;
+	font-family: "Bricolage Grotesque", monospace;
+	font-size: 1.4rem;
+}
+
+section {
+	position: relative;
+	width: 100%;
+	height: 100dvh;
+	overflow: hidden;
+}
+
+.intro,
+.outro {
+	max-width: 80%;
+	display: flex;
+	flex-direction: column;
+	gap: 2em;
+	justify-content: center;
+	align-items: center;
+}
+
+.sticky-cards {
+	background-color: #e3e3db;
+	perspective: 700px; /* 3D Transforms should actually feel like they have depth */
+}
+
+.sticky-cards .card {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 85%;
+	height: 80%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 1rem;
+	padding: 2.5rem;
+	border-radius: 1.4rem;
+	color: #fff;
+	transform-origin: center bottom;
+	will-change: transform;
+}
+
+.card .col {
+	flex: 1;
+	height: 100%;
+}
+
+.card .col:nth-child(1) {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	padding: 0.5rem;
+    width: 33%;
+}
+
+.card .col:nth-child(2) {
+	border-radius: 1.4rem;
+	overflow: hidden;
+    width: 66%;
+}
+
+.card#card-1 {
+	background-color: var(--base-1);
+	z-index: 5;
+}
+
+.card#card-2 {
+	background-color: var(--base-2);
+	z-index: 4;
+}
+
+.card#card-3 {
+	background-color: var(--base-3);
+	z-index: 3;
+}
+
+.card#card-4 {
+	background-color: var(--base-4);
+	z-index: 2;
+}
+
+@media (max-width: 1000px) {
+	.sticky-cards .card {
+		width: calc(100% -2rem);
+		height: 85%;
+		flex-direction: column;
+	}
+
+	.card .col {
+		width: 80%;
+	}
+}
