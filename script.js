@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const haptics = new WebHaptics();
     const lenis = new Lenis({
         syncTouch: true,
-        touchMultiplier: 1.3,
+        touchMultiplier: 1.35,
         // infinite: true,
         // orientation: "horizontal",
     });
@@ -40,6 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const button = document.getElementById("evadeButton");
     const section = button.closest("section");
+    let hasStartedDodging = false;
 
     button.addEventListener("mouseover", dodging_button);
     button.addEventListener("touchstart", (_) => {
@@ -52,6 +53,20 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     function dodging_button() {
+        if (!hasStartedDodging) {
+            const buttonRect = button.getBoundingClientRect();
+            const sectionRect = section.getBoundingClientRect();
+
+            button.style.position = "absolute";
+            button.style.left = "0";
+            button.style.top = "0";
+            gsap.set(button, {
+                x: buttonRect.left - sectionRect.left,
+                y: buttonRect.top - sectionRect.top,
+            });
+            hasStartedDodging = true;
+        }
+
         const maxX = section.clientWidth - button.offsetWidth;
         const maxY = section.clientHeight - button.offsetHeight;
 
