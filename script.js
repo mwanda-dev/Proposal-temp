@@ -11,8 +11,8 @@ gsap.registerPlugin(ScrollTrigger, SplitText);
 document.addEventListener("DOMContentLoaded", () => {
     const haptics = new WebHaptics();
     const lenis = new Lenis({
-        syncTouch: true,
-        touchMultiplier: 1.35,
+        // syncTouch: true,
+        // touchMultiplier: 1.35,
         // infinite: true,
         // orientation: "horizontal",
     });
@@ -25,6 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const cards = document.querySelectorAll(".sticky-cards .card");
     const totalCards = cards.length;
     const segmentSize = 1 / totalCards;
+    const endProgress = (totalCards - 0.4) / totalCards;
 
     const cardYOffset = 5;
     const cardScaleStep = 0.075;
@@ -81,12 +82,12 @@ document.addEventListener("DOMContentLoaded", () => {
     ScrollTrigger.create({
         trigger: ".sticky-cards",
         start: "top top",
-        end: `+=${window.innerHeight * 8}px`,
+        end: `+=${window.innerHeight * 8 * endProgress}px`,
         pin: true,
         pinSpacing: true,
         scrub: 1,
         onUpdate: (self) => {
-            const progress = self.progress;
+            const progress = self.progress * endProgress;
 
             // The currently animating card based on the scroll progress
             const activeIndex = Math.min(
