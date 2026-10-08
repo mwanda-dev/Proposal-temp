@@ -1,4 +1,5 @@
 import gsap from "gsap";
+import { CustomEase } from "gsap/CustomEase";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
 import Lenis from "lenis";
@@ -6,10 +7,105 @@ import { WebHaptics, defaultPatterns } from "web-haptics";
 
 // medium impact
 
-gsap.registerPlugin(ScrollTrigger, SplitText);
+gsap.registerPlugin(ScrollTrigger, SplitText, CustomEase);
+
+CustomEase.create("osmo-ease", "0.625, 0.05, 0, 1");
 
 document.addEventListener("DOMContentLoaded", () => {
+    const cards = document.querySelectorAll(".sticky-cards .card");
+    const titleWords = new Map();
+    let activeCardIndex = -1;
+    let activeCardTween;
+
+    document.fonts.ready.then(() => {
+        const headings = document.querySelectorAll(
+            ".intro-text, .sticky-cards .card h1, .outro-text",
+        );
+
+        headings.forEach((heading) => {
+            const split = SplitText.create(heading, {
+                type: "words",
+                mask: "words",
+                wordsClass: "word",
+            });
+            titleWords.set(heading, split.words);
+        });
+
+        cards.forEach((card) => {
+            const heading = card.querySelector("h1");
+            const words = heading && titleWords.get(heading);
+            if (words) {
+                gsap.set(words, { yPercent: 110, scale: 0.55, autoAlpha: 0 });
+            }
+        });
+
+        document.querySelectorAll(".intro-text, .outro-text").forEach((heading) => {
+            gsap.fromTo(
+                titleWords.get(heading),
+                { yPercent: 110, scale: 0.55, autoAlpha: 0 },
+                {
+                    yPercent: 0,
+                    scale: 1,
+                    autoAlpha: 1,
+                    duration: 0.65,
+                    stagger: 0.04,
+                    ease: "osmo-ease",
+                    transformOrigin: "center left",
+                    scrollTrigger: {
+                        trigger: heading,
+                        start: "top 85%",
+                        toggleActions: "play none none reverse",
+                    },
+                },
+            );
+        });
+
+        if (activeCardIndex >= 0) {
+            animateCardHeading(activeCardIndex);
+        }
+    });
+
+    function animateCardHeading(index) {
+        const heading = cards[index]?.querySelector("h1");
+        const words = heading && titleWords.get(heading);
+
+        if (!words) return;
+
+        activeCardTween?.kill();
+        activeCardTween = gsap.fromTo(
+            words,
+            { yPercent: 110, scale: 0.55, autoAlpha: 0 },
+            {
+                yPercent: 0,
+                scale: 1,
+                autoAlpha: 1,
+                duration: 0.65,
+                stagger: 0.04,
+                ease: "osmo-ease",
+                transformOrigin: "center left",
+            },
+        );
+    }
+
+    function resetCardHeading(index) {
+        const heading = cards[index]?.querySelector("h1");
+        const words = heading && titleWords.get(heading);
+
+        if (words) {
+            gsap.set(words, { yPercent: 110, scale: 0.55, autoAlpha: 0 });
+        }
+    }
+
     const haptics = new WebHaptics();
+    const yesButton = document.getElementById("yesButton");
+    yesButton.addEventListener("click", () => {
+        haptics.trigger([
+  { duration: 30 },
+  { delay: 60, duration: 40, intensity: 2 },
+]);
+        createConfettiSplash(yesButton);
+    });
+
     const lenis = new Lenis({
         // syncTouch: true,
         // touchMultiplier: 1.35,
@@ -22,7 +118,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     gsap.ticker.lagSmoothing(0);
 
-    const cards = document.querySelectorAll(".sticky-cards .card");
     const totalCards = cards.length;
     const segmentSize = 1 / totalCards;
     const endProgress = (totalCards - 0.4) / totalCards;
@@ -79,6 +174,84 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    function createConfettiSplash(origin) {
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+        if (!context) {
+            console.error("Unable to create the confetti canvas context.");
+            return;
+        }
+
+        const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        canvas.width = width * pixelRatio;
+        canvas.height = height * pixelRatio;
+        Object.assign(canvas.style, {
+            position: "fixed",
+            inset: "0",
+            width: "100%",
+            height: "100%",
+            pointerEvents: "none",
+            zIndex: "9999",
+        });
+        context.scale(pixelRatio, pixelRatio);
+        document.body.appendChild(canvas);
+
+        const bounds = origin.getBoundingClientRect();
+        const originX = bounds.left + bounds.width / 2;
+        const originY = bounds.top + bounds.height / 2;
+        const colors = ["#574AE2", "#222a68", "#654597", "#ab81cd", "#f4d35e"];
+        const particles = Array.from({ length: 100 }, () => ({
+            x: originX,
+            y: originY,
+            velocityX: (Math.random() - 0.5) * 14,
+            velocityY: -Math.random() * 12 - 3,
+            rotation: Math.random() * Math.PI * 2,
+            rotationSpeed: (Math.random() - 0.5) * 0.24,
+            size: Math.random() * 7 + 4,
+            color: colors[Math.floor(Math.random() * colors.length)],
+        }));
+        let previousTime = performance.now();
+        const duration = 1800;
+
+        function renderConfetti(time) {
+            const delta = Math.min((time - previousTime) / 16.67, 2);
+            previousTime = time;
+            context.clearRect(0, 0, width, height);
+
+            particles.forEach((particle) => {
+                particle.x += particle.velocityX * delta;
+                particle.y += particle.velocityY * delta;
+                particle.velocityY += 0.22 * delta;
+                particle.rotation += particle.rotationSpeed * delta;
+
+                context.save();
+                context.translate(particle.x, particle.y);
+                context.rotate(particle.rotation);
+                context.fillStyle = particle.color;
+                context.fillRect(
+                    -particle.size / 2,
+                    -particle.size / 2,
+                    particle.size,
+                    particle.size * 0.65,
+                );
+                context.restore();
+            });
+
+            if (time - startTime < duration) {
+                requestAnimationFrame(renderConfetti);
+            } else {
+                canvas.remove();
+            }
+        }
+
+        const startTime = performance.now();
+        requestAnimationFrame(renderConfetti);
+    }
+
     ScrollTrigger.create({
         trigger: ".sticky-cards",
         start: "top top",
@@ -94,6 +267,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 Math.floor(progress / segmentSize),
                 totalCards - 1,
             );
+
+            if (activeIndex !== activeCardIndex) {
+                if (activeCardIndex >= 0) {
+                    resetCardHeading(activeCardIndex);
+                }
+                activeCardIndex = activeIndex;
+                animateCardHeading(activeIndex);
+            }
 
             const segmentProgress =
                 (progress - activeIndex * segmentSize) / segmentSize;
